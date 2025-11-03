@@ -22,7 +22,7 @@ class TimeCalculator {
     // 哲理类别
     this.categories = [
       '成长启发', '转化积淀', '孕育收获', '净化流动', '滋养生长',
-      '突破变革', '稳固引导', '冷静调和', '重塑锤炼', '修剪聚焦'
+      '突破变革', '稳固引导', '冷静调和', '重塑锤炼', '修剪聚焦', '当下接受'
     ];
   }
 
@@ -75,7 +75,7 @@ class TimeCalculator {
   // 计算哲理类别
   calculateCategory(date, numbers = null) {
     const dateNumbers = numbers || this.calculateDateNumbers(date);
-    const categoryIndex = (dateNumbers.yearNumber + dateNumbers.monthNumber + dateNumbers.dayNumber) % 10;
+    const categoryIndex = (dateNumbers.yearNumber + dateNumbers.monthNumber + dateNumbers.dayNumber) % this.categories.length;
     return this.categories[categoryIndex];
   }
 

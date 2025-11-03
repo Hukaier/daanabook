@@ -300,7 +300,7 @@ const demoServer = http.createServer((req, res) => {
   }
 });
 
-const PORT = 3004;
+const PORT = 3005;
 demoServer.listen(PORT, () => {
   console.log(`🎉 答案之书演示服务器启动成功!`);
   console.log(`📱 请在浏览器中访问: http://localhost:${PORT}`);
