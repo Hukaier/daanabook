@@ -679,7 +679,13 @@ const demoServer = http.createServer((req, res) => {
                     data.timeSlot = '未知';
                 }
 
-                container.innerHTML =
+                // 调试DOM操作
+                console.log('开始更新DOM...');
+                console.log('容器元素:', container);
+                console.log('数据对象:', data);
+                console.log('问题:', question);
+
+                const htmlContent =
                     '<div class="wisdom advice-mode">' +
                         '<div class="question-label">您的问题</div>' +
                         '<div class="user-question">"' + question + '"</div>' +
@@ -693,6 +699,24 @@ const demoServer = http.createServer((req, res) => {
                         '</div>' +
                         (data.fromCache ? '<div class="cache-note">* 缓存结果</div>' : '') +
                     '</div>';
+
+                console.log('生成的HTML长度:', htmlContent.length);
+                console.log('HTML预览:', htmlContent.substring(0, 100) + '...');
+
+                container.innerHTML = htmlContent;
+
+                // 验证DOM更新 - 延迟检查确保渲染完成
+                setTimeout(() => {
+                    console.log('DOM更新后容器内容长度:', container.innerHTML.length);
+                    console.log('DOM更新后容器预览:', container.innerHTML.substring(0, 100) + '...');
+                    console.log('DOM更新完成');
+
+                    // 强制触发重排以确保显示
+                    container.style.display = 'none';
+                    container.offsetHeight; // 强制重排
+                    container.style.display = 'block';
+                    console.log('强制重排完成');
+                }, 10);
 
                 // 清空问题
                 currentQuestion = '';
@@ -784,7 +808,7 @@ const demoServer = http.createServer((req, res) => {
   }
 });
 
-const PORT = 3006;
+const PORT = 3007;
 demoServer.listen(PORT, () => {
   console.log(`🎉 答案之书演示服务器启动成功!`);
   console.log(`📱 请在浏览器中访问: http://localhost:${PORT}`);

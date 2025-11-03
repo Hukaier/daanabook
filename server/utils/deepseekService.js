@@ -1,4 +1,5 @@
 const axios = require('axios');
+const https = require('https');
 
 class DeepSeekService {
   constructor(apiKey = null) {
@@ -20,6 +21,12 @@ class DeepSeekService {
       // 构建用户消息
       const userMessage = this.buildUserMessage(question, wisdomData);
 
+      // 创建自定义https代理
+      const httpsAgent = new https.Agent({
+        keepAlive: true,
+        secureProtocol: 'TLSv1_2_method'
+      });
+
       const response = await axios.post(this.baseURL, {
         model: 'deepseek-chat',
         messages: [
@@ -34,7 +41,9 @@ class DeepSeekService {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
-        timeout: 10000
+        timeout: 15000,
+        httpsAgent: httpsAgent,
+        proxy: false
       });
 
       const advice = response.data.choices[0].message.content.trim();
