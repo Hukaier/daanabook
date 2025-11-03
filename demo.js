@@ -641,6 +641,23 @@ const demoServer = http.createServer((req, res) => {
 
                 const data = await response.json();
 
+                // 调试信息
+                console.log('API响应:', data);
+
+                // 确保数据完整性
+                if (!data.advice) {
+                    data.advice = '静心感受当下，答案就在心中';
+                }
+                if (!data.element) {
+                    data.element = '未知';
+                }
+                if (!data.category) {
+                    data.category = '当下接受';
+                }
+                if (!data.timeSlot) {
+                    data.timeSlot = '未知';
+                }
+
                 container.innerHTML =
                     '<div class="wisdom advice-mode">' +
                         '<div class="question-label">您的问题</div>' +
