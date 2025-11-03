@@ -48,6 +48,48 @@ const demoServer = http.createServer((req, res) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: '服务器内部错误' }));
     }
+  } else if (req.url === '/api/ask' && req.method === 'POST') {
+    // 问题咨询接口
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+
+    req.on('end', () => {
+      try {
+        const { question } = JSON.parse(body);
+
+        if (!question || !question.trim()) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: '请提供有效的问题' }));
+          return;
+        }
+
+        // 创建时间计算器
+        const calculator = new TimeCalculator();
+        const wisdomData = calculator.calculateWisdomData(new Date(), true);
+
+        // 获取"当下接受"类别的建议作为备用
+        const content = getRandomContent('当下接受', wisdomData.numbers.timeSeed);
+
+        const response = {
+          advice: content ? content.suggestion : '静心感受当下，答案就在心中',
+          category: wisdomData.category,
+          element: wisdomData.element,
+          timeSlot: wisdomData.timeSlot,
+          fromCache: false,
+          timestamp: wisdomData.timestamp
+        };
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(response, null, 2));
+
+      } catch (error) {
+        console.error('处理问题咨询时出错:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '服务器内部错误' }));
+      }
+    });
   } else if (req.url === '/') {
     // 简单的HTML页面
     const html = `
@@ -471,10 +513,30 @@ const demoServer = http.createServer((req, res) => {
 
     <script>
         let currentQuestion = '';
+        let clickCount = 0;
+        let lastClickTime = 0;
+        const CLICK_LIMIT = 5; // 点击限制
+        const TIME_WINDOW = 10000; // 10秒时间窗口
 
         // 处理容器点击
         function handleContainerClick() {
             if (document.getElementById('ask-form').style.display !== 'block') {
+                const now = Date.now();
+
+                // 如果距离上次点击超过时间窗口，重置计数
+                if (now - lastClickTime > TIME_WINDOW) {
+                    clickCount = 0;
+                }
+
+                clickCount++;
+                lastClickTime = now;
+
+                // 检查是否超过点击限制
+                if (clickCount >= CLICK_LIMIT) {
+                    showAcceptanceReminder();
+                    return;
+                }
+
                 showRandomWisdom();
             }
         }
@@ -603,6 +665,52 @@ const demoServer = http.createServer((req, res) => {
             }
         }
 
+        // 显示当下接受提醒
+        function showAcceptanceReminder() {
+            const container = document.getElementById('wisdom-container');
+            const acceptanceMessages = [
+                { philosophy: "宇宙给你的，正是你此刻需要的", suggestion: "每一次刷新，都是对当下指导的不信任" },
+                { philosophy: "静心感受，答案就在心中", suggestion: "真正的智慧不需要频繁寻找" },
+                { philosophy: "当下即是最好的安排", suggestion: "相信此刻的指引，内心自然平静" },
+                { philosophy: "答案之书从不重复给出相同的智慧", suggestion: "但重复的寻找会掩盖真正的声音" },
+                { philosophy: "你需要的不是更多建议，而是静心体会", suggestion: "停止寻找，开始感受" }
+            ];
+
+            const message = acceptanceMessages[Math.floor(Math.random() * acceptanceMessages.length)];
+
+            container.innerHTML =
+                '<div class="wisdom acceptance-reminder">' +
+                    '<div class="philosophy" style="color: #ffd700;">' + message.philosophy + '</div>' +
+                    '<div class="divider"></div>' +
+                    '<div class="suggestion" style="color: rgba(255, 255, 255, 0.8);">' + message.suggestion + '</div>' +
+                    '<div class="divider"></div>' +
+                    '<div style="text-align: center; margin-top: 2rem;">' +
+                        '<button onclick="resetClickCount()" style="padding: 0.8rem 2rem; background: rgba(255, 215, 0, 0.2); border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 2rem; color: #ffd700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease;">' +
+                            '我已领悟，重新开始' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+
+            // 重置提示
+            const hint = document.querySelector('.hint');
+            if (hint) {
+                hint.textContent = '静心体会当下';
+                hint.style.opacity = '1';
+            }
+        }
+
+        // 重置点击计数
+        function resetClickCount() {
+            clickCount = 0;
+            lastClickTime = 0;
+            showRandomWisdom();
+
+            const hint = document.querySelector('.hint');
+            if (hint) {
+                hint.textContent = '点击任意位置';
+            }
+        }
+
         // 更新字符计数
         function updateCharCount() {
             const input = document.getElementById('question-input');
@@ -638,7 +746,7 @@ const demoServer = http.createServer((req, res) => {
   }
 });
 
-const PORT = 3005;
+const PORT = 3006;
 demoServer.listen(PORT, () => {
   console.log(`🎉 答案之书演示服务器启动成功!`);
   console.log(`📱 请在浏览器中访问: http://localhost:${PORT}`);
