@@ -1,5 +1,6 @@
 const http = require('http');
 const TimeCalculator = require('./server/utils/timeCalculator');
+const DeepSeekService = require('./server/utils/deepseekService');
 const { getRandomContent } = require('./server/data/wisdomContent');
 
 // 创建一个简单的演示服务器
@@ -65,24 +66,43 @@ const demoServer = http.createServer((req, res) => {
           return;
         }
 
-        // 创建时间计算器
+        // 创建时间计算器和DeepSeek服务
         const calculator = new TimeCalculator();
         const wisdomData = calculator.calculateWisdomData(new Date(), true);
+        const deepSeekService = new DeepSeekService();
 
-        // 获取"当下接受"类别的建议作为备用
-        const content = getRandomContent('当下接受', wisdomData.numbers.timeSeed);
+        // 尝试调用DeepSeek API
+        deepSeekService.getWisdomAdvice(wisdomData, question.trim())
+          .then(advice => {
+            const response = {
+              advice: advice,
+              category: wisdomData.category,
+              element: wisdomData.element,
+              timeSlot: wisdomData.timeSlot,
+              fromCache: false,
+              timestamp: wisdomData.timestamp
+            };
 
-        const response = {
-          advice: content ? content.suggestion : '静心感受当下，答案就在心中',
-          category: wisdomData.category,
-          element: wisdomData.element,
-          timeSlot: wisdomData.timeSlot,
-          fromCache: false,
-          timestamp: wisdomData.timestamp
-        };
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(response, null, 2));
+          })
+          .catch(error => {
+            console.log('DeepSeek API调用失败，使用备用建议:', error.message);
+            // 获取"当下接受"类别的建议作为备用
+            const content = getRandomContent('当下接受', wisdomData.numbers.timeSeed);
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(response, null, 2));
+            const response = {
+              advice: content ? content.suggestion : '静心感受当下，答案就在心中',
+              category: wisdomData.category,
+              element: wisdomData.element,
+              timeSlot: wisdomData.timeSlot,
+              fromCache: false,
+              timestamp: wisdomData.timestamp
+            };
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(response, null, 2));
+          });
 
       } catch (error) {
         console.error('处理问题咨询时出错:', error);
