@@ -173,6 +173,128 @@ const demoServer = http.createServer((req, res) => {
             background: rgba(255, 255, 255, 0.05);
         }
 
+        .controls {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 20;
+        }
+
+        .btn-random, .btn-ask {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-random:hover, .btn-ask:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .ask-form {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            z-index: 30;
+            backdrop-filter: blur(20px);
+        }
+
+        .form-content {
+            text-align: center;
+        }
+
+        .form-content h3 {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-content textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-content textarea:focus {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-content textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-cancel, .btn-submit {
+            padding: 0.5rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel {
+            background: transparent;
+        }
+
+        .btn-submit {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-submit:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .char-count {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+            text-align: right;
+        }
+
         .loading {
             color: rgba(255, 255, 255, 0.5);
             font-size: 1.2rem;
@@ -185,6 +307,43 @@ const demoServer = http.createServer((req, res) => {
         .loading::after {
             content: '...';
             animation: dots 1.5s infinite;
+        }
+
+        .wisdom.advice-mode {
+            max-width: 600px;
+        }
+
+        .question-label {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .user-question {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-advice {
+            font-size: 2.5rem;
+            line-height: 1.4;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .cache-note {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            font-style: italic;
+            margin-top: 1rem;
         }
 
         @keyframes fadeIn {
@@ -223,6 +382,37 @@ const demoServer = http.createServer((req, res) => {
 
         /* 响应式设计 */
         @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 0.5rem;
+                top: 1rem;
+            }
+
+            .btn-random, .btn-ask {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .ask-form {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .wisdom .philosophy {
+                font-size: 1.8rem;
+            }
+
+            .ai-advice {
+                font-size: 2rem;
+            }
+
+            .user-question {
+                font-size: 1rem;
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
             .container {
                 padding: 1.5rem;
             }
@@ -247,15 +437,55 @@ const demoServer = http.createServer((req, res) => {
     </style>
 </head>
 <body>
-    <div class="container" onclick="getWisdom()">
+    <div class="container" onclick="handleContainerClick()">
         <div id="wisdom-container">
-            <div class="loading">点击获取智慧</div>
+            <div class="loading">点击获取智慧或提出问题</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="event.stopPropagation(); showRandomWisdom()" class="btn-random">
+            随机智慧
+        </button>
+        <button onclick="event.stopPropagation(); showAskForm()" class="btn-ask">
+            请问智慧
+        </button>
+    </div>
+
+    <!-- 问题表单 -->
+    <div id="ask-form" class="ask-form" style="display: none;">
+        <div class="form-content">
+            <h3>询问你的问题</h3>
+            <textarea id="question-input" placeholder="请输入你的问题..." maxlength="100"></textarea>
+            <div class="form-actions">
+                <button onclick="hideAskForm()" class="btn-cancel">返回</button>
+                <button onclick="submitQuestion()" class="btn-submit">获得答案</button>
+            </div>
+            <div class="char-count">
+                <span id="char-count">0</span>/100
+            </div>
         </div>
     </div>
 
     <div class="hint">点击任意位置</div>
 
     <script>
+        let currentQuestion = '';
+
+        // 处理容器点击
+        function handleContainerClick() {
+            if (document.getElementById('ask-form').style.display !== 'block') {
+                showRandomWisdom();
+            }
+        }
+
+        // 显示随机智慧
+        async function showRandomWisdom() {
+            hideAskForm();
+            await getWisdom();
+        }
+
+        // 获取常规智慧
         async function getWisdom() {
             const container = document.getElementById('wisdom-container');
             container.innerHTML = '<div class="loading">寻找智慧中</div>';
@@ -280,12 +510,120 @@ const demoServer = http.createServer((req, res) => {
             }
         }
 
-        // 页面加载时自动获取一次
-        window.onload = getWisdom;
+        // 显示问题表单
+        function showAskForm() {
+            const form = document.getElementById('ask-form');
+            const container = document.getElementById('wisdom-container');
+            const controls = document.querySelector('.controls');
+            const hint = document.querySelector('.hint');
+
+            form.style.display = 'block';
+            container.style.display = 'none';
+            controls.style.display = 'none';
+            hint.textContent = '点击提交问题';
+
+            // 自动聚焦到输入框
+            setTimeout(() => {
+                document.getElementById('question-input').focus();
+            }, 100);
+        }
+
+        // 隐藏问题表单
+        function hideAskForm() {
+            const form = document.getElementById('ask-form');
+            const controls = document.querySelector('.controls');
+            const hint = document.querySelector('.hint');
+
+            form.style.display = 'none';
+            controls.style.display = 'flex';
+            hint.textContent = '点击任意位置';
+
+            // 清空输入框
+            document.getElementById('question-input').value = '';
+            updateCharCount();
+        }
+
+        // 提交问题
+        async function submitQuestion() {
+            const input = document.getElementById('question-input');
+            const question = input.value.trim();
+
+            if (!question) {
+                alert('请输入问题');
+                return;
+            }
+
+            if (question.length > 100) {
+                alert('问题过长，请控制在100字以内');
+                return;
+            }
+
+            currentQuestion = question;
+            const container = document.getElementById('wisdom-container');
+            const form = document.getElementById('ask-form');
+
+            form.style.display = 'none';
+            container.innerHTML = '<div class="loading">询问中...</div>';
+
+            try {
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                const data = await response.json();
+
+                container.innerHTML =
+                    '<div class="wisdom advice-mode">' +
+                        '<div class="question-label">您的问题</div>' +
+                        '<div class="user-question">"' + question + '"</div>' +
+                        '<div class="divider"></div>' +
+                        '<div class="ai-advice">' + data.advice + '</div>' +
+                        '<div class="divider"></div>' +
+                        '<div class="meta">' +
+                            '<span class="element">' + data.element + '</span>' +
+                            '<span class="element">' + data.category + '</span>' +
+                            '<span class="element">' + data.timeSlot + '时</span>' +
+                        '</div>' +
+                        (data.fromCache ? '<div class="cache-note">* 缓存结果</div>' : '') +
+                    '</div>';
+
+                // 清空问题
+                currentQuestion = '';
+
+            } catch (error) {
+                console.error('获取AI智慧失败:', error);
+                container.innerHTML = '<div class="loading">网络异常，请稍后再试</div>';
+            }
+        }
+
+        // 更新字符计数
+        function updateCharCount() {
+            const input = document.getElementById('question-input');
+            const count = document.getElementById('char-count');
+            count.textContent = input.value.length;
+        }
+
+        // 字符计数监听
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('question-input');
+            if (input) {
+                input.addEventListener('input', updateCharCount);
+            }
+        });
 
         // 隐藏提示文本
         setTimeout(() => {
-            document.querySelector('.hint').style.opacity = '0';
+            const hint = document.querySelector('.hint');
+            if (hint) {
+                hint.style.opacity = '0';
+            }
         }, 5000);
     </script>
 </body>

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const TimeCalculator = require('./utils/timeCalculator');
+const DeepSeekService = require('./utils/deepseekService');
 const { getRandomContent } = require('./data/wisdomContent');
 
 const app = express();
@@ -12,11 +13,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 初始化时间计算器
+// 初始化服务
 const timeCalculator = new TimeCalculator();
+const deepSeekService = new DeepSeekService();
 
 // 用户的访问记录（简单的内存存储，生产环境应使用数据库）
 const userSessions = new Map();
+const questionCache = new Map(); // 问题缓存，避免频繁调用API
 
 // API路由
 
@@ -109,12 +112,69 @@ app.get('/api/categories', (req, res) => {
   }
 });
 
+// 问题咨询接口
+app.post('/api/ask', async (req, res) => {
+  try {
+    const { question, timestamp } = req.body;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({ error: '请提供有效的问题' });
+    }
+
+    // 验证问题长度
+    if (question.length > 100) {
+      return res.status(400).json({ error: '问题过长，请精简在100字以内' });
+    }
+
+    // 计算六壬数据
+    const questionTime = timestamp ? new Date(timestamp) : new Date();
+    const wisdomData = timeCalculator.calculateWisdomData(questionTime, true);
+
+    // 检查缓存
+    const cacheKey = `${question.trim()}_${wisdomData.category}`;
+    if (questionCache.has(cacheKey)) {
+      const cachedAdvice = questionCache.get(cacheKey);
+      return res.json({
+        advice: cachedAdvice,
+        category: wisdomData.category,
+        element: wisdomData.element,
+        timeSlot: wisdomData.timeSlot,
+        fromCache: true,
+        timestamp: wisdomData.timestamp
+      });
+    }
+
+    // 调用DeepSeek API
+    const advice = await deepSeekService.getWisdomAdvice(wisdomData, question);
+
+    // 缓存结果（缓存5分钟）
+    questionCache.set(cacheKey, advice);
+    setTimeout(() => {
+      questionCache.delete(cacheKey);
+    }, 5 * 60 * 1000);
+
+    res.json({
+      advice: advice,
+      category: wisdomData.category,
+      element: wisdomData.element,
+      timeSlot: wisdomData.timeSlot,
+      fromCache: false,
+      timestamp: wisdomData.timestamp
+    });
+
+  } catch (error) {
+    console.error('处理问题咨询时出错:', error);
+    res.status(500).json({ error: '服务器内部错误' });
+  }
+});
+
 // 健康检查接口
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    deepseekConfigured: deepSeekService.isConfigured()
   });
 });
 
