@@ -508,10 +508,10 @@ const demoServer = http.createServer((req, res) => {
 
     <div class="controls">
         <button onclick="event.stopPropagation(); showRandomWisdom()" class="btn-random">
-            随机智慧
+            请说
         </button>
         <button onclick="event.stopPropagation(); showAskForm()" class="btn-ask">
-            请问智慧
+            请问
         </button>
     </div>
 
