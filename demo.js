@@ -379,6 +379,7 @@ const demoServer = http.createServer((req, res) => {
             line-height: 1.4;
             margin-bottom: 2rem;
             font-weight: 300;
+            color: #ffffff;
         }
 
         .cache-note {
