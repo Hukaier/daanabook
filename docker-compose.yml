@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  wisdom-book:
+    build: .
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - wisdom-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - wisdom-book
+    restart: unless-stopped
+    networks:
+      - wisdom-network
+
+networks:
+  wisdom-network:
+    driver: bridge
