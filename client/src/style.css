@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Noto Serif SC', Georgia, serif;
+  }
+}
+
+@layer components {
+  .wisdom-card {
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-wisdom-blue/10 p-8;
+  }
+
+  .wisdom-text {
+    @apply text-wisdom-blue text-xl md:text-2xl leading-relaxed font-medium;
+  }
+
+  .suggestion-text {
+    @apply text-wisdom-gray text-lg md:text-xl leading-relaxed;
+  }
+
+  .element-icon {
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold;
+  }
+
+  .element-木 { @apply bg-green-500; }
+  .element-火 { @apply bg-red-500; }
+  .element-土 { @apply bg-yellow-600; }
+  .element-金 { @apply bg-gray-500; }
+  .element-水 { @apply bg-blue-500; }
+
+  .loading-spinner {
+    @apply w-8 h-8 border-4 border-wisdom-blue/20 border-t-wisdom-blue rounded-full animate-spin;
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: all 0.8s ease;
+  }
+
+  .fade-enter-from, .fade-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}

@@ -1,0 +1,141 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const TimeCalculator = require('./utils/timeCalculator');
+const { getRandomContent } = require('./data/wisdomContent');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// 中间件
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 初始化时间计算器
+const timeCalculator = new TimeCalculator();
+
+// 用户的访问记录（简单的内存存储，生产环境应使用数据库）
+const userSessions = new Map();
+
+// API路由
+
+// 获取智慧答案的主要接口
+app.get('/api/wisdom', (req, res) => {
+  try {
+    const timestamp = req.query.timestamp ? new Date(req.query.timestamp) : new Date();
+
+    // 计算基础数据（强制随机以获得不同内容）
+    const wisdomData = timeCalculator.calculateWisdomData(timestamp, true);
+
+    // 生成随机种子
+    const randomSeed = wisdomData.numbers.timeSeed;
+
+    // 获取内容
+    const content = getRandomContent(wisdomData.category, randomSeed);
+
+    if (!content) {
+      return res.status(500).json({ error: '无法获取内容' });
+    }
+
+    // 检查用户最近是否看到过相同内容
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const userKey = `${clientIp}_${wisdomData.sessionId}`;
+
+    // 简单的防重复机制
+    if (userSessions.has(userKey)) {
+      const lastContent = userSessions.get(userKey);
+      if (lastContent && lastContent.philosophy === content.philosophy) {
+        // 如果内容相同，使用下一个内容
+        const nextContent = getRandomContent(wisdomData.category, randomSeed + 1);
+        if (nextContent) {
+          Object.assign(content, nextContent);
+        }
+      }
+    }
+
+    // 记录用户的访问
+    userSessions.set(userKey, content);
+
+    // 定期清理旧的记录（保留最近1000条）
+    if (userSessions.size > 1000) {
+      const keysToDelete = Array.from(userSessions.keys()).slice(0, 100);
+      keysToDelete.forEach(key => userSessions.delete(key));
+    }
+
+    // 返回结果
+    const response = {
+      philosophy: content.philosophy,
+      suggestion: content.suggestion,
+      category: wisdomData.category,
+      element: wisdomData.element,
+      timeSlot: wisdomData.timeSlot,
+      sessionId: wisdomData.sessionId,
+      timestamp: wisdomData.timestamp
+    };
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('获取智慧内容时出错:', error);
+    res.status(500).json({ error: '服务器内部错误' });
+  }
+});
+
+// 获取特定时间的计算结果
+app.post('/api/calculate-time', (req, res) => {
+  try {
+    const { timestamp } = req.body;
+    const date = timestamp ? new Date(timestamp) : new Date();
+
+    const result = timeCalculator.calculateWisdomData(date);
+    res.json(result);
+
+  } catch (error) {
+    console.error('时间计算错误:', error);
+    res.status(500).json({ error: '计算时间时出错' });
+  }
+});
+
+// 获取所有可用类别
+app.get('/api/categories', (req, res) => {
+  try {
+    const { wisdomContent } = require('./data/wisdomContent');
+    const categories = Object.keys(wisdomContent);
+    res.json({ categories });
+  } catch (error) {
+    console.error('获取类别错误:', error);
+    res.status(500).json({ error: '获取类别时出错' });
+  }
+});
+
+// 健康检查接口
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// 静态文件服务（如果需要部署前端）
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// 处理前端路由
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+// 错误处理中间件
+app.use((error, req, res, next) => {
+  console.error('未处理的错误:', error);
+  res.status(500).json({ error: '服务器内部错误' });
+});
+
+// 启动服务器
+app.listen(PORT, () => {
+  console.log(`智慧之书服务器运行在端口 ${PORT}`);
+  console.log(`访问 http://localhost:${PORT} 查看应用`);
+});
+
+module.exports = app;
