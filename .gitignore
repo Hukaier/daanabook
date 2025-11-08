@@ -78,3 +78,20 @@ jspm_packages/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Project specific ignores
+data/
+newsCache.json
+node
+test-*.js
+debug-*.js
+check-*.js
+demo*.js
+demo*.html
+fragment-*.html
+fragment-*.js
+index.html
+api-status-report.md
+diagnostic-report.md
+linux-deployment-guide.md
+功能完成报告.md

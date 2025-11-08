@@ -31,9 +31,23 @@ const demoServer = http.createServer((req, res) => {
         return;
       }
 
+      // 检查是否是频繁点击（通过请求头传递点击信息）
+      const isFrequentClicking = req.headers['x-frequent-clicking'] === 'true';
+
+      let philosophy, suggestion;
+      if (isFrequentClicking) {
+        // 频繁点击时显示委婉的提示信息
+        philosophy = '静心感受当下，答案就在心中';
+        suggestion = '每一份遇见都是恰逢其时';
+      } else {
+        // 正常情况下使用获取的内容
+        philosophy = content ? content.philosophy : '静心感受当下，答案就在心中';
+        suggestion = content ? content.suggestion : '每一份遇见都是恰逢其时';
+      }
+
       const response = {
-        philosophy: content.philosophy,
-        suggestion: content.suggestion,
+        philosophy: philosophy,
+        suggestion: suggestion,
         category: wisdomData.category,
         element: wisdomData.element,
         timeSlot: wisdomData.timeSlot,
@@ -58,7 +72,7 @@ const demoServer = http.createServer((req, res) => {
 
     req.on('end', () => {
       try {
-        const { question } = JSON.parse(body);
+        const { question, fragmentMode } = JSON.parse(body);
 
         if (!question || !question.trim()) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -71,8 +85,10 @@ const demoServer = http.createServer((req, res) => {
         const wisdomData = calculator.calculateWisdomData(new Date(), true);
         const deepSeekService = new DeepSeekService();
 
-        // 尝试调用DeepSeek API
-        deepSeekService.getWisdomAdvice(wisdomData, question.trim())
+        // 根据模式选择不同的API方法
+        const apiMethod = fragmentMode ? 'getFragmentWisdom' : 'getWisdomAdvice';
+
+        deepSeekService[apiMethod](wisdomData, question.trim())
           .then(advice => {
             const response = {
               advice: advice,
@@ -111,9 +127,52 @@ const demoServer = http.createServer((req, res) => {
       }
     });
   } else if (req.url === '/') {
-    // 简单的HTML页面
-    const html = `
-<!DOCTYPE html>
+    // 返回答案之书主页
+    const fs = require('fs');
+    try {
+      const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Error loading page');
+    }
+  } else if (req.url === '/fragment-wisdom.html') {
+    // 返回只言片语页面
+    const fs = require('fs');
+    try {
+      const html = fs.readFileSync(__dirname + '/fragment-wisdom.html', 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Error loading page');
+    }
+  } else if (req.url === '/fragment-demo.html') {
+    // 返回只言片语演示页面
+    const fs = require('fs');
+    try {
+      const html = fs.readFileSync(__dirname + '/fragment-demo.html', 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Error loading page');
+    }
+  } else if (req.url === '/fragment-wisdom.js') {
+    // 返回只言片语JavaScript文件
+    const fs = require('fs');
+    try {
+      const js = fs.readFileSync(__dirname + '/fragment-wisdom.js', 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8' });
+      res.end(js);
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Error loading script');
+    }
+  } else if (req.url === '/old') {
+    // 简单的HTML页面（旧版本，备用）
+    const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">

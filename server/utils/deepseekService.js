@@ -57,6 +57,162 @@ class DeepSeekService {
   }
 
   /**
+   * 获取碎片化智慧建议
+   * @param {Object} wisdomData - 六壬排盘数据
+   * @param {string} question - 用户问题
+   * @returns {Promise<string>} 碎片化智慧建议
+   */
+  async getFragmentWisdom(wisdomData, question) {
+    try {
+      // 构建碎片化系统提示词
+      const systemPrompt = this.buildFragmentSystemPrompt(wisdomData);
+
+      // 构建碎片化用户消息
+      const userMessage = this.buildFragmentUserMessage(question, wisdomData);
+
+      // 创建自定义https代理
+      const httpsAgent = new https.Agent({
+        keepAlive: true,
+        secureProtocol: 'TLSv1_2_method'
+      });
+
+      const response = await axios.post(this.baseURL, {
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        max_tokens: 150,
+        temperature: 0.8,
+        stream: false
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 15000,
+        httpsAgent: httpsAgent,
+        proxy: false
+      });
+
+      const advice = response.data.choices[0].message.content.trim();
+      return this.formatFragmentAdvice(advice);
+
+    } catch (error) {
+      console.error('DeepSeek碎片化API调用失败:', error.message);
+      // 如果API失败，返回本地碎片化建议
+      return this.getFragmentFallbackAdvice(wisdomData, question);
+    }
+  }
+
+  /**
+   * 构建碎片化系统提示词
+   */
+  buildFragmentSystemPrompt(wisdomData) {
+    return `你是一位充满智慧和正能量的数字诗人，擅长运用碎片化的语言为人们提供深层的心灵启迪和积极引导。
+
+当前六壬排盘信息：
+- 时辰：${wisdomData.timeSlot}
+- 五行：${wisdomData.element}
+- 类别：${wisdomData.category}
+
+请根据这些信息，为用户的提问提供充满正能量的碎片化智慧词汇。
+
+回答要求：
+1. 返回4-6个积极向上的中文词汇
+2. 每个词汇2-4个字
+3. 词汇之间用空格分隔
+4. 词汇要充满希望、光明、温暖和力量
+5. 避免任何消极、负面或中性的表达
+6. 传递积极乐观的人生态度
+7. 让用户感受到内心的光明和前行的勇气
+8. 充满诗意美感，给人以美的享受
+
+示例：
+- "光明 希望 温暖 前行"
+- "绽放 飞翔 璀璨 梦想"
+- "宁静 喜悦 感恩 成长"
+
+请给出一组充满正能量、温暖人心的碎片化词汇：`;
+  }
+
+  /**
+   * 构建碎片化用户消息
+   */
+  buildFragmentUserMessage(question, wisdomData) {
+    return `用户问题：${question}
+
+基于当前的${wisdomData.element}元素和${wisdomData.timeSlot}时辰的积极能量，
+请为用户提供一组充满希望、温暖和力量的正能量碎片化词汇，
+帮助用户看到生活中的光明面，感受到内心的力量和前行的勇气。`;
+  }
+
+  /**
+   * 格式化碎片化建议
+   */
+  formatFragmentAdvice(advice) {
+    // 先尝试按空格分割，如果没有空格则尝试按其他符号分割
+    let fragments = advice.split(/\s+/).filter(word => word.length > 0);
+
+    // 如果分割结果太少，尝试按标点符号分割
+    if (fragments.length < 2) {
+      fragments = advice.split(/[，。！？、；：]/).filter(word => word.length > 0);
+    }
+
+    // 如果还是不够，尝试按常见汉字分割
+    if (fragments.length < 2) {
+      // 尝试按常见分隔符或2-4字词语分割
+      const words = advice.match(/[\u4e00-\u9fa5]{2,4}/g) || [];
+      fragments = words.slice(0, 5);
+    }
+
+    // 确保是碎片化词汇而不是完整句子
+    return fragments
+      .map(word => word.replace(/[。！？，、；：]/g, '').trim())
+      .filter(word => word.length >= 2 && word.length <= 4)
+      .slice(0, 6)
+      .join(' ');
+  }
+
+  /**
+   * 碎片化备用建议（当API失败时）
+   */
+  getFragmentFallbackAdvice(wisdomData, question) {
+    const fragmentAdvices = {
+      'metal': [
+        '光明 希望 璀璨 飞翔',
+        '锐利 突破 清晰 决断',
+        '锋芒 结构 革新 新生'
+      ],
+      'wood': [
+        '生长 发芽 绽放 梦想',
+        '创造 希望 繁荣 成长',
+        '伸展 向上 新生 繁荣'
+      ],
+      'water': [
+        '流动 温暖 包容 滋润',
+        '智慧 净化 适应 柔软',
+        '洗涤 沉淀 融化 深度'
+      ],
+      'fire': [
+        '热情 温暖 光芒 璀璨',
+        '创造 活力 绽放 梦想',
+        '照亮 升华 温暖 希望'
+      ],
+      'earth': [
+        '稳定 滋养 感恩 成长',
+        '耐心 收获 扎根 包容',
+        '承载 孕育 积累 希望'
+      ]
+    };
+
+    const element = wisdomData.element;
+    const advices = fragmentAdvices[element] || fragmentAdvices['earth'];
+
+    return advices[Math.floor(Math.random() * advices.length)];
+  }
+
+  /**
    * 构建系统提示词
    */
   buildSystemPrompt(wisdomData) {

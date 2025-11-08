@@ -3,10 +3,11 @@ const cors = require('cors');
 const path = require('path');
 const TimeCalculator = require('./utils/timeCalculator');
 const DeepSeekService = require('./utils/deepseekService');
+const NewsCollector = require('./services/newsCollector');
 const { getRandomContent } = require('./data/wisdomContent');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 33333;
 
 // 中间件
 app.use(cors());
@@ -16,6 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 初始化服务
 const timeCalculator = new TimeCalculator();
 const deepSeekService = new DeepSeekService();
+const newsCollector = new NewsCollector();
 
 // 用户的访问记录（简单的内存存储，生产环境应使用数据库）
 const userSessions = new Map();
@@ -168,14 +170,109 @@ app.post('/api/ask', async (req, res) => {
   }
 });
 
+// 实时新闻相关API
+
+// 统一的新闻API接口
+app.get('/api/news', (req, res) => {
+  try {
+    const { category } = req.query;
+
+    if (category) {
+      // 返回特定类别的新闻
+      const news = newsCollector.getNewsByCategory(category);
+      res.json({
+        success: true,
+        data: {
+          category,
+          items: news,
+          total: news.length
+        },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // 返回所有新闻
+      const allNews = newsCollector.getAllNews();
+      res.json({
+        success: true,
+        data: allNews,
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('获取新闻时出错:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取新闻失败',
+      message: error.message
+    });
+  }
+});
+
+// 新闻分类列表API
+app.get('/api/news/categories', (req, res) => {
+  try {
+    const categories = [
+      { key: 'ai', name: 'AI资讯', description: '人工智能和机器学习相关新闻' },
+      { key: 'geopolitics', name: '地缘政治', description: '全球政治经济动态' },
+      { key: 'fujian', name: '福建新闻', description: '福建省地方新闻' },
+      { key: 'innerMongolia', name: '内蒙古新闻', description: '内蒙古自治区地方新闻' },
+      { key: 'github', name: 'GitHub热门', description: 'GitHub热门项目和开源动态' },
+      { key: 'music', name: '音乐资讯', description: '音乐和娱乐相关新闻' }
+    ];
+
+    res.json({
+      success: true,
+      data: categories,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('获取新闻分类时出错:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取新闻分类失败',
+      message: error.message
+    });
+  }
+});
+
+// 手动刷新新闻缓存
+app.post('/api/news/refresh', async (req, res) => {
+  try {
+    await newsCollector.updateAllNews();
+    res.json({
+      message: '新闻缓存已刷新',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('刷新新闻缓存时出错:', error);
+    res.status(500).json({ error: '刷新新闻缓存时出错' });
+  }
+});
+
 // 健康检查接口
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    deepseekConfigured: deepSeekService.isConfigured()
-  });
+  try {
+    const newsStatus = newsCollector.getLastUpdate();
+    res.json({
+      success: true,
+      data: {
+        status: 'healthy',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        services: {
+          deepseek: deepSeekService.isConfigured(),
+          newsCollector: !!newsStatus,
+          lastNewsUpdate: newsStatus
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: '健康检查失败',
+      message: error.message
+    });
+  }
 });
 
 // 静态文件服务（如果需要部署前端）

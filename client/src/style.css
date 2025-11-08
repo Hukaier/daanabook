@@ -1,46 +1,81 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    font-family: 'Noto Serif SC', Georgia, serif;
-  }
+/* 基础样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@layer components {
-  .wisdom-card {
-    @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-wisdom-blue/10 p-8;
-  }
-
-  .wisdom-text {
-    @apply text-wisdom-blue text-xl md:text-2xl leading-relaxed font-medium;
-  }
-
-  .suggestion-text {
-    @apply text-wisdom-gray text-lg md:text-xl leading-relaxed;
-  }
-
-  .element-icon {
-    @apply w-12 h-12 rounded-full flex items-center justify-center text-white font-bold;
-  }
-
-  .element-木 { @apply bg-green-500; }
-  .element-火 { @apply bg-red-500; }
-  .element-土 { @apply bg-yellow-600; }
-  .element-金 { @apply bg-gray-500; }
-  .element-水 { @apply bg-blue-500; }
-
-  .loading-spinner {
-    @apply w-8 h-8 border-4 border-wisdom-blue/20 border-t-wisdom-blue rounded-full animate-spin;
-  }
-
-  .fade-enter-active, .fade-leave-active {
-    transition: all 0.8s ease;
-  }
-
-  .fade-enter-from, .fade-leave-to {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+/* 暗色主题样式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+  color: #ffffff;
+  min-height: 100vh;
 }
+
+/* 过渡动画 */
+.fade-enter-active, .fade-leave-active {
+  transition: all 0.8s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* 加载动画 */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 智慧卡片样式 */
+.wisdom-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.wisdom-text {
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.suggestion-text {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* 元素图标样式 */
+.element-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.element-木 { background: #10b981; }
+.element-火 { background: #ef4444; }
+.element-土 { background: #d97706; }
+.element-金 { background: #6b7280; }
+.element-水 { background: #3b82f6; }
